@@ -2,6 +2,9 @@ debug/*
 *.ovpn
 terraform-iam/testing.auto.tfvars
 
+# Ignore large file
+*.qcow2
+
 # Infracost
 **/.infracost/*
 
