@@ -120,9 +120,9 @@ The Terraform scripts will provision a 4.17 ROKS clusters with two Bare metal wo
     apiVersion: kubevirt.io/v1
     kind: VirtualMachine
     metadata:
-      name: vm-fedora-stateless
+      name: fedora-stateless
       labels:
-        app: vm-fedora-stateless
+        app: fedora-stateless
     spec:
       running: true
       template:
@@ -155,7 +155,7 @@ The Terraform scripts will provision a 4.17 ROKS clusters with two Bare metal wo
               requests:
                 memory: 2Gi
           evictionStrategy: LiveMigrate
-          hostname: vm-fedora-stateless
+          hostname: fedora-stateless
           networks:
             - name: nic0
               pod: {}
@@ -173,7 +173,7 @@ The Terraform scripts will provision a 4.17 ROKS clusters with two Bare metal wo
                     list: |
                       root:password
                     expire: False
-                  hostname: vm-fedora-stateless
+                  hostname: fedora-stateless
               name: cloudinitdisk
     EOF
     ```
@@ -184,7 +184,7 @@ The Terraform scripts will provision a 4.17 ROKS clusters with two Bare metal wo
 
     ![Fedora VM](./images/osv-vm-fedora-running.png)
 
-1. Click on vm-fedora-stateless → VNC Console. Login with credentials as: Username: root Password: password
+1. Click on fedora-stateless → VNC Console. Login with credentials as: Username: root Password: password
 
 ## Access the Virtual Machine via the cli (oc and virtctl)
 
@@ -204,7 +204,7 @@ The Terraform scripts will provision a 4.17 ROKS clusters with two Bare metal wo
 
     ```sh
     NAME            AGE     VOLUME
-    vm-fedora-stateless   9m23s
+    fedora-stateless   9m23s
     ```
 
 1. List the Virtual Machine Instances
@@ -217,22 +217,28 @@ The Terraform scripts will provision a 4.17 ROKS clusters with two Bare metal wo
 
     ```sh
     NAME            AGE   PHASE     IP              NODENAME                                             READY
-    vm-fedora-stateless   12m   Running   172.17.57.108   kube-d0criacr0g0gtjirqeb0-osvroks-default-0000024f   True
+    fedora-stateless   12m   Running   172.17.57.108   kube-d0criacr0g0gtjirqeb0-osvroks-default-0000024f   True
     ```
 
 1. Access the virtual machine instance via the virtctl cli. Use the credentials as root / password
 
     ```sh
-    virtctl console vm-fedora-stateless
+    virtctl console fedora-stateless
     ```
 
     Output
 
     ```sh
-    Successfully connected to vm-fedora-stateless console. The escape sequence is ^]
+    Successfully connected to fedora-stateless console. The escape sequence is ^]
 
-    vm-fedora-stateless login: root
+    fedora-stateless login: root
     Password:
     Last login: Tue May 06 16:11:23 on tty1
-    [root@vm-fedora-stateless ~]#
+    [root@fedora-stateless ~]#
+    ```
+
+1. Delete the Virtual Machine
+
+    ```sh
+    oc delete vm/fedora-stateless
     ```
