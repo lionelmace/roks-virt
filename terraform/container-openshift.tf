@@ -279,35 +279,6 @@ resource "ibm_resource_instance" "cos_openshift_registry" {
   tags              = var.tags
 }
 
-
-##############################################################################
-# Connect Log Analysis Service to cluster
-# 
-# Integrating Logging requires the master node to be 'Ready'
-# If not, you will face a timeout error after 45mins
-##############################################################################
-# DEPRECATED (LMA)
-# resource "ibm_ob_logging" "openshift_log_connect" {
-#   depends_on       = [module.log_analysis.key_guid]
-#   cluster          = ibm_container_vpc_cluster.roks_cluster.id
-#   instance_id      = module.log_analysis.guid
-#   private_endpoint = var.log_private_endpoint
-# }
-
-##############################################################################
-# Connect Monitoring Service to cluster
-# 
-# Integrating Monitoring requires the master node to be 'Ready'
-# If not, you will face a timeout error after 45mins
-##############################################################################
-# DEPRECATED
-# resource "ibm_ob_monitoring" "openshift_connect_monitoring" {
-#   depends_on       = [module.cloud_monitoring.key_guid]
-#   cluster          = ibm_container_vpc_cluster.roks_cluster.id
-#   instance_id      = module.cloud_monitoring.guid
-#   private_endpoint = var.sysdig_private_endpoint
-# }
-
 # IAM AUTHORIZATIONS
 ##############################################################################
 
