@@ -1,10 +1,22 @@
 # Terraform scripts to install ROKS with Bare metal workers
 
+Let's deploy a stateless VM with a ContainerDisk, which is ephemeral storage. Thus, the VM will not have any Persistent Volumes (PVs). The basic steps here would be to create a container image and use it as the root disk for the Virtual Machine. The OpenShift's internal registry is used to store the container image.
+
 ![Operator OSV welcome](./images/operator-osv-welcome.png)
 
-## Provision the cluster
+## Provision the cluster via Terraform
+
+The Terraform scripts will provision a 4.17 ROKS clusters with two Bare metal worker nodes in the region Toronto.
 
 1. Provision the required infrastructure using the Terraform scripts
+
+    ```sh
+    cd terraform
+    terraform init
+    terraform apply
+    ```
+
+## Connect to the cluster
 
 1. Connect to the cluster
 
@@ -108,9 +120,9 @@
     apiVersion: kubevirt.io/v1
     kind: VirtualMachine
     metadata:
-      name: fedora-sample
+      name: vm-fedora-stateless
       labels:
-        app: fedora-sample
+        app: vm-fedora-stateless
     spec:
       running: true
       template:
@@ -143,7 +155,7 @@
               requests:
                 memory: 2Gi
           evictionStrategy: LiveMigrate
-          hostname: fedora-sample
+          hostname: vm-fedora-stateless
           networks:
             - name: nic0
               pod: {}
@@ -161,7 +173,7 @@
                     list: |
                       root:password
                     expire: False
-                  hostname: fedora-sample
+                  hostname: vm-fedora-stateless
               name: cloudinitdisk
     EOF
     ```
@@ -172,7 +184,7 @@
 
     ![Fedora VM](./images/osv-vm-fedora-running.png)
 
-1. Click on fedora-sample → VNC Console. Login with credentials as: Username: root Password: password
+1. Click on vm-fedora-stateless → VNC Console. Login with credentials as: Username: root Password: password
 
 ## Access the Virtual Machine via the cli (oc and virtctl)
 
@@ -192,7 +204,7 @@
 
     ```sh
     NAME            AGE     VOLUME
-    fedora-sample   9m23s
+    vm-fedora-stateless   9m23s
     ```
 
 1. List the Virtual Machine Instances
@@ -205,22 +217,22 @@
 
     ```sh
     NAME            AGE   PHASE     IP              NODENAME                                             READY
-    fedora-sample   12m   Running   172.17.57.108   kube-d0criacr0g0gtjirqeb0-osvroks-default-0000024f   True
+    vm-fedora-stateless   12m   Running   172.17.57.108   kube-d0criacr0g0gtjirqeb0-osvroks-default-0000024f   True
     ```
 
 1. Access the virtual machine instance via the virtctl cli. Use the credentials as root / password
 
     ```sh
-    virtctl console fedora-sample
+    virtctl console vm-fedora-stateless
     ```
 
     Output
 
     ```sh
-    Successfully connected to fedora-sample console. The escape sequence is ^]
+    Successfully connected to vm-fedora-stateless console. The escape sequence is ^]
 
-    fedora-sample login: root
+    vm-fedora-stateless login: root
     Password:
     Last login: Tue May 06 16:11:23 on tty1
-    [root@fedora-sample ~]#
+    [root@vm-fedora-stateless ~]#
     ```
