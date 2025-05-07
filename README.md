@@ -4,6 +4,13 @@ Let's deploy a stateless VM with a ContainerDisk, which is ephemeral storage. Th
 
 ![Operator OSV welcome](./images/operator-osv-welcome.png)
 
+## Pre-Requisites
+
+    * terraform
+    * docker or podman
+    * virtctl
+    * OC command line
+
 ## Provision the cluster via Terraform
 
 > Estimated duration: 1 hour
@@ -17,6 +24,16 @@ The Terraform scripts will provision a 4.17 ROKS clusters with two Bare metal wo
     terraform init
     terraform apply
     ```
+
+## Install the OpenShift Virtualization Operator
+
+1. Install the operator from the OperatorHub
+
+    ![Operator OSV](./images/operator-osv.png)
+
+    ![Operator OSV install](./images/operator-osv-install.png)
+
+    ![Operator OSV welcome](./images/operator-osv-welcome.png)
 
 ## Connect to the cluster
 
@@ -43,33 +60,11 @@ The Terraform scripts will provision a 4.17 ROKS clusters with two Bare metal wo
     OPENSHIFT_REGISTRY=$(oc get routes -n openshift-image-registry | grep default-route-openshift-image-registry | awk '{print $2}')
     ```
 
-1. Login to the Registry
+1. Login to the OpenShift Registry
 
     ```sh
     podman login -u kubeadmin -p `oc whoami -t` $OPENSHIFT_REGISTRY
     ````
-
-1. Build the image
-
-    ```sh
-    podman build -t $OPENSHIFT_REGISTRY/$DEPLOY_NAMESPACE/virt-fedora:32 .
-    ```
-
-1. Push the image
-
-    ```sh
-    podman push $OPENSHIFT_REGISTRY/$DEPLOY_NAMESPACE/virt-fedora:32
-    ```
-
-## Install the OpenShift Virtualization Operator
-
-1. Install the operator from the OperatorHub
-
-    ![Operator OSV](./images/operator-osv.png)
-
-    ![Operator OSV install](./images/operator-osv-install.png)
-
-    ![Operator OSV welcome](./images/operator-osv-welcome.png)
 
 ## Import Image to the Registry
 
@@ -91,13 +86,13 @@ The Terraform scripts will provision a 4.17 ROKS clusters with two Bare metal wo
 1. Build the image
 
     ```sh
-    docker build -t $OPENSHIFT_REGISTRY/$DEPLOY_NAMESPACE/virt-fedora:32 .
+    podman build -t $OPENSHIFT_REGISTRY/$DEPLOY_NAMESPACE/virt-fedora:32 .
     ```
 
 1. Push the image
 
     ```sh
-    docker push $OPENSHIFT_REGISTRY/$DEPLOY_NAMESPACE/virt-fedora:32
+    podman push $OPENSHIFT_REGISTRY/$DEPLOY_NAMESPACE/virt-fedora:32
     ```
 
 1. Verify the image is uploaded to the registry under the namespace
