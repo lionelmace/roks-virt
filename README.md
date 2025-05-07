@@ -46,7 +46,7 @@ The Terraform scripts will provision a 4.17 ROKS clusters with two Bare metal wo
 1. Create a new project
 
     ```sh
-    DEPLOY_NAMESPACE=vm-project
+    export DEPLOY_NAMESPACE=vm-project
 
     oc new-project $DEPLOY_NAMESPACE
     oc project $DEPLOY_NAMESPACE
@@ -66,7 +66,7 @@ The Terraform scripts will provision a 4.17 ROKS clusters with two Bare metal wo
     podman login -u kubeadmin -p `oc whoami -t` $OPENSHIFT_REGISTRY
     ````
 
-## Import Image to the Registry
+## Import Image to the OpenShift Registry
 
 1. Download image
 
@@ -105,10 +105,10 @@ The Terraform scripts will provision a 4.17 ROKS clusters with two Bare metal wo
 1. Delete the local image
 
     ```sh
-    rm -rf Fedora-Cloud-Base-32-1.6.x86_64.qcow2 Dockerfile
+    rm Fedora-Cloud-Base-32-1.6.x86_64.qcow2
     ```
 
-## Provision a VM
+## Provision a stateless VM
 
 1. Provision a VM
 
@@ -178,6 +178,116 @@ The Terraform scripts will provision a 4.17 ROKS clusters with two Bare metal wo
 1. Navigate to Openshift Console → Virtualization → VirtualMachines.
 
 1. Notice the new Virtual Machine been created and in Running state.
+
+    ![Fedora VM](./images/osv-vm-fedora-running.png)
+
+1. Click on fedora-stateless → VNC Console. Login with credentials as: Username: root Password: password
+
+## Provision a stateful VM
+
+1. Retrieve and store the StorageClass name in a variable
+
+    ```sh
+    oc get sc
+
+1. Let's use the default storage class
+
+    ```sh
+    STORAGE_CLASS_NAME=ibmc-vpc-block-10iops-tier
+    ```
+
+1. Create an Image Pull Secret so that the Containerized Data Importer(CDI) can authenticate itself against the internal registry and pull the image to create a DataVolume out of it. The secret is essentially the default service account image pull secret token which is meant for registry authentication.
+
+    ```sh
+    ./generate_image_pull_secret.sh
+    ```
+
+1. Apply the VirtualMachine manifest
+
+    ```sh
+    cat <<EOF | oc apply -f -
+    apiVersion: kubevirt.io/v1
+    kind: VirtualMachine
+    metadata:
+      name: fedora-dv
+      labels:
+        app: fedora-dv
+    spec:
+      dataVolumeTemplates:
+        - apiVersion: cdi.kubevirt.io/v1
+          kind: DataVolume
+          metadata:
+            name: fedora-dv-disk-0
+          spec:
+            pvc:
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 50G
+              storageClassName: $STORAGE_CLASS_NAME
+            source:
+              registry:
+                url: "docker://image-registry.openshift-image-registry.svc:5000/$DEPLOY_NAMESPACE/virt-fedora:32"
+                secretRef: "internal-reg-pull-secret"
+      running: true
+      template:
+        metadata:
+          labels:
+            kubevirt.io/vm: vm-datavolume
+        spec:
+          domain:
+            cpu:
+              cores: 1
+              sockets: 1
+              threads: 1
+            devices:
+              disks:
+                - bootOrder: 1
+                  disk:
+                    bus: virtio
+                  name: disk-0
+                - disk:
+                    bus: virtio
+                  name: cloudinitdisk
+              interfaces:
+                - bootOrder: 2
+                  masquerade: {}
+                  model: virtio
+                  name: nic0
+              networkInterfaceMultiqueue: true
+              rng: {}
+            machine:
+              type: pc-q35-rhel8.2.0
+            resources:
+              requests:
+                memory: 4Gi
+          evictionStrategy: LiveMigrate
+          hostname: fedora-pvc
+          networks:
+            - name: nic0
+              pod: {}
+          terminationGracePeriodSeconds: 0
+          volumes:
+            - dataVolume:
+                name: fedora-dv-disk-0
+              name: disk-0
+            - cloudInitNoCloud:
+                userData: |
+                  #cloud-config
+                  ssh_pwauth: True
+                  chpasswd:
+                    list: |
+                      root:password
+                    expire: False
+                  hostname: fedora-dv
+              name: cloudinitdisk
+    EOF
+    ```
+
+1. Navigate to Openshift Console → Virtualization → VirtualMachines.
+
+1. Notice the new Virtual Machine been created and in **Provisioning** state.
 
     ![Fedora VM](./images/osv-vm-fedora-running.png)
 
