@@ -6,6 +6,8 @@ Let's deploy a stateless VM with a ContainerDisk, which is ephemeral storage. Th
 
 ## Provision the cluster via Terraform
 
+> Estimated duration: 1 hour
+
 The Terraform scripts will provision a 4.17 ROKS clusters with two Bare metal worker nodes in the region Toronto.
 
 1. Provision the required infrastructure using the Terraform scripts
@@ -237,8 +239,16 @@ The Terraform scripts will provision a 4.17 ROKS clusters with two Bare metal wo
     [root@fedora-stateless ~]#
     ```
 
+## Clean up the VM and the infrastructure
+
 1. Delete the Virtual Machine
 
     ```sh
     oc delete vm/fedora-stateless
+    ```
+
+1. Delete the infrastructure
+
+    ```sh
+    terraform destroy
     ```
