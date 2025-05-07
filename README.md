@@ -1,6 +1,15 @@
-# Terraform scripts to install ROKS with Bare metal workers
+# Run Virtual Machine on OpenShift on IBM Cloud
 
-Let's deploy a stateless VM with a ContainerDisk, which is ephemeral storage. Thus, the VM will not have any Persistent Volumes (PVs). The basic steps here would be to create a container image and use it as the root disk for the Virtual Machine. The OpenShift's internal registry is used to store the container image.
+> Estimated duration: 2 hours
+
+First, you will provision a ROKS cluster with Bare metal workers.
+
+Then, you will install the OpenShift Virtualization operator.
+
+Finally, you will deploy two types of VMs:
+
+* a stateless VM with a ContainerDisk, which is ephemeral storage. The basic steps here would be to create a container image and use it as the root disk for the Virtual Machine. The OpenShift's internal registry is used to store the container image.
+* a stateful the VM with Persistent Volumes (PVs).
 
 ![Operator OSV welcome](./images/operator-osv-welcome.png)
 

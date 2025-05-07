@@ -12,8 +12,6 @@ then
     exit 1
 fi
 
-#oc project "${DEPLOY_NAMESPACE}"
-
 OPENSHIFT_IMAGE_PULL_SECRET=$(oc extract secret/`oc get sa/default -n ${DEPLOY_NAMESPACE} -o yaml | grep default-dockercfg | cut -c 9- | head -1` --to=- --keys=.dockercfg -n ${DEPLOY_NAMESPACE} | jq  -r '.["image-registry.openshift-image-registry.svc.cluster.local:5000"].password')
 
 cat << EOF | oc apply -n ${DEPLOY_NAMESPACE} -f -
