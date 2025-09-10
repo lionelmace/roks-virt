@@ -41,7 +41,7 @@ provider "helm" {
 ############################################################################
 data "ibm_container_cluster_config" "roks_cluster_config" {
   cluster_name_id   = ibm_container_vpc_cluster.roks_cluster.id
-  resource_group_id = ibm_resource_group.group.id
+  resource_group_id = local.resource_group_id
   endpoint_type     = "private"
 }
 

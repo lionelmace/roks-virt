@@ -60,7 +60,7 @@ data "ibm_cis_ip_addresses" "ip_addresses" {
 resource "ibm_is_security_group" "sg-cis-cloudflare" {
   name           = format("%s-%s", local.basename, "sg-cis-ips")
   vpc            = ibm_is_vpc.vpc.id
-  resource_group = ibm_resource_group.group.id
+  resource_group = local.resource_group_id
   tags           = var.tags
 }
 
@@ -81,7 +81,7 @@ resource "ibm_is_security_group_rule" "sg-rule-inbound-cloudflare-ipv4" {
 resource "ibm_is_security_group" "kube-master-outbound" {
   name           = format("%s-%s", local.basename, "kube-master-outbound")
   vpc            = ibm_is_vpc.vpc.id
-  resource_group = ibm_resource_group.group.id
+  resource_group = local.resource_group_id
   tags           = var.tags
 }
 
@@ -110,7 +110,7 @@ resource "ibm_is_security_group_rule" "sg-rule-kube-master-udp-outbound" {
 resource "ibm_is_security_group" "sg-cluster-outbound" {
   name           = format("%s-%s", local.basename, "kube-outbound-sg")
   vpc            = ibm_is_vpc.vpc.id
-  resource_group = ibm_resource_group.group.id
+  resource_group = local.resource_group_id
   tags           = var.tags
 }
 
@@ -142,7 +142,7 @@ resource "ibm_is_security_group_rule" "sg-rule-outbound-addprefix-4443" {
 resource "ibm_is_security_group" "custom-sg-for-lb" {
   name           = format("%s-%s", local.basename, "custom-sg-for-lb")
   vpc            = ibm_is_vpc.vpc.id
-  resource_group = ibm_resource_group.group.id
+  resource_group = local.resource_group_id
   tags           = var.tags
 }
 
