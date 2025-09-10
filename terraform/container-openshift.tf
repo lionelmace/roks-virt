@@ -149,8 +149,8 @@ resource "ibm_container_vpc_cluster" "roks_cluster" {
   name              = format("%s-%s", local.basename, var.openshift_cluster_name)
   vpc_id            = ibm_is_vpc.vpc.id
   resource_group_id = ibm_resource_group.group.id
-  # Optional: Specify OpenShift version. If not included, 4.17 is used
-  kube_version         = var.openshift_version == "" ? "4.17_openshift" : var.openshift_version
+  # Optional: Specify OpenShift version. If not included, 4.19 is used
+  kube_version         = var.openshift_version == "" ? "4.19_openshift" : var.openshift_version
   operating_system     = var.openshift_os
   cos_instance_crn     = var.is_openshift_cluster ? ibm_resource_instance.cos_openshift_registry[0].id : null
   entitlement          = var.entitlement
@@ -235,11 +235,11 @@ resource "ibm_container_addons" "roks-odf-addons" {
   count      = var.install_odf_addons ? 1 : 0
   depends_on = [ibm_container_vpc_cluster.roks_cluster]
   cluster    = ibm_container_vpc_cluster.roks_cluster.name
-  # Source: https://github.com/IBM-Cloud/terraform-provider-ibm/tree/master/examples/openshift-data-foundation/addon/4.17.0
+  # Source: https://github.com/IBM-Cloud/terraform-provider-ibm/tree/master/examples/openshift-data-foundation/addon/4.18.0
   # Specify workerpool to deploy ODF, if not specified ODF will deploy on all nodes
   addons {
     name            = "openshift-data-foundation"
-    version         = "4.17.0"
+    version         = "4.18.0"
     parameters_json = <<PARAMETERS_JSON
     {
         "billingType":"advanced"
