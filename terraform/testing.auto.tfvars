@@ -22,6 +22,11 @@ openshift_os             = "RHCOS"
 openshift_machine_flavor = "cx2d.metal.96x192" # Bare metal flavor
 install_odf_addons       = false
 
+# Skip zones if insufficient capacity within those zones
+excluded_zones = ["ca-tor-1", "ca-tor-3"]
+# Set the worker_count to 2 to comply with minimum worker per cluster if 2 zones are excluded.
+openshift_worker_nodes_per_zone = 2
+
 # Scale up   by adding a worker pool
 # Scale down by setting the number of worker to Zero
 # Uncomment to create worker pool

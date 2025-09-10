@@ -32,6 +32,11 @@ variable "openshift_worker_nodes_per_zone" {
   default     = 1
 }
 
+variable "excluded_zones" {
+  description = "List of zones to exclude from the dynamic zone assignment"
+  type        = list(string)
+}
+
 variable "worker_labels" {
   description = "Labels on all the workers in the default worker pool."
   type        = map(any)
@@ -160,9 +165,7 @@ resource "ibm_container_vpc_cluster" "roks_cluster" {
   security_groups      = [ibm_is_security_group.sg-cluster-outbound.id]
 
   flavor                          = var.openshift_machine_flavor
-  # Should only 1 MZR be used, set the worker_count to 2 which is the minimum for a cluster.
-  # worker_count                    = var.openshift_worker_nodes_per_zone
-  worker_count                    = 2
+  worker_count                    = var.openshift_worker_nodes_per_zone
   wait_till                       = var.openshift_wait_till
   disable_public_service_endpoint = var.openshift_disable_public_service_endpoint
   # By default, public outbound access is blocked in OpenShift versions 4.15
@@ -171,15 +174,10 @@ resource "ibm_container_vpc_cluster" "roks_cluster" {
   dynamic "zones" {
     # for_each = { for subnet in ibm_is_subnet.subnet : subnet.id => subnet }
     # Skip ca-tor-1 and ca-tor-3 because insufficient capacity within those MZRs.
-    # for_each = {
-    #   for idx, subnet in ibm_is_subnet.subnet :
-    #   subnet.id => subnet
-    #   if idx != 0
-    # }
     for_each = {
       for subnet in ibm_is_subnet.subnet :
       subnet.id => subnet
-      if !contains(["ca-tor-1", "ca-tor-3"], subnet.zone)
+      if !contains(var.excluded_zones, subnet.zone)
     }
     content {
       name      = zones.value.zone
