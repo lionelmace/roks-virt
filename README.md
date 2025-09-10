@@ -24,9 +24,13 @@ Finally, you will deploy two types of VMs:
 
 > Estimated duration: 1 hour
 
-The Terraform scripts will provision a 4.17 ROKS clusters with two Bare metal worker nodes in the region Toronto.
+The Terraform scripts will provision a 4.19 ROKS clusters with two Bare metal worker nodes in the region Toronto.
 
-1. Provision the required infrastructure using the Terraform scripts
+1. Set the region, the prefix, the OpenShift version in the file `testing.auto.tfvars`
+
+    > Some MZR (MZR) may have insufficient infrastructure capacity. Should it happen, modify the variable *excluded_zones*.
+
+1. Provision the required infrastructure using the Terraform scripts locally or in Schematics within the IBM Cloud Console.
 
     ```sh
     cd terraform
