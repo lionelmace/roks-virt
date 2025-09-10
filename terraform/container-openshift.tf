@@ -228,10 +228,10 @@ resource "ibm_container_addons" "roks-general-addons" {
     name    = "vpc-block-csi-driver"
     version = "5.2"
   }
-  addons {
-    name    = "cluster-autoscaler"
-    version = "1.2.3"
-  }
+  # addons {
+  #   name    = "cluster-autoscaler"
+  #   version = "1.2.3"
+  # }
   # addons {
   #   name    = "vpc-file-csi-driver"
   #   version = "2.0"
