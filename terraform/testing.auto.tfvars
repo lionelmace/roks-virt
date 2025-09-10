@@ -17,7 +17,7 @@ vpc_enable_public_gateway     = true
 ## Cluster ROKS
 ##############################################################################
 # Optional: Specify OpenShift version. If not included, 4.19 is used
-openshift_version        = "4.19"
+openshift_version        = "4.19_openshift"
 openshift_os             = "RHCOS"
 openshift_machine_flavor = "cx2d.metal.96x192" # Bare metal flavor
 install_odf_addons       = false
