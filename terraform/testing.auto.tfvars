@@ -57,5 +57,5 @@ openshift_disable_public_service_endpoint = false
 openshift_disable_outbound_traffic_protection = true
 
 # Available values: MasterNodeReady, OneWorkerNodeReady, or IngressReady
-openshift_wait_till          = "OneWorkerNodeReady"
+openshift_wait_till          = "IngressReady"
 openshift_update_all_workers = true
