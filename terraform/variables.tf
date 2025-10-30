@@ -1,56 +1,42 @@
-##############################################################################
-# Account Variables
-##############################################################################
+########################################################################################################################
+# Input variables
+########################################################################################################################
 
 variable "ibmcloud_api_key" {
-  description = "APIkey that's associated with the account to provision resources to"
   type        = string
-  default     = ""
+  description = "The IBM Cloud api token"
   sensitive   = true
+  default     = ""
 }
 
 variable "prefix" {
-  type = string
-  # default     = ""
-  description = "A prefix for all resources to be created. If none provided a random prefix will be created"
-}
-
-# Warning: only computed at apply time, 
-resource "random_string" "random" {
-  # count = var.prefix == "" ? 1 : 0
-  length  = 6
-  special = false
-  upper   = false
-}
-
-locals {
-  # Any value that depends on basename (like the VPC name) becomes unknown at plan time.
-  # basename = lower(var.prefix == "" ? "icn-${random_string.random.0.result}" : var.prefix)
-  # VPE module needs the supplied VPC/Subnet names at plan time. So removed random.
-  basename = lower(var.prefix == "" ? "icn-default" : var.prefix)
+  type        = string
+  description = "Prefix for name of all resource created by this example"
+  validation {
+    error_message = "Prefix must begin and end with a letter and contain only letters, numbers, and - characters."
+    condition     = can(regex("^([A-z]|[a-z][-a-z0-9]*[a-z0-9])$", var.prefix))
+  }
 }
 
 variable "region" {
-  description = "IBM Cloud region where all resources will be provisioned (e.g. eu-de)"
-  default     = "eu-de"
+  type        = string
+  description = "Region where resources are created"
 }
 
-variable "icr_region" {
-  description = "IBM Container Registry Region (e.g. de.icr.io)"
-  default     = "de.icr.io"
+variable "resource_group" {
+  type        = string
+  description = "An existing resource group name to use for this example, if unset a new resource group will be created"
+  default     = null
 }
 
-variable "tags" {
-  description = "List of Tags"
+variable "resource_tags" {
   type        = list(string)
-  default     = ["tf", "osv"]
+  description = "Optional list of tags to be added to created resources"
+  default     = []
 }
 
-# Account ID is required for CBR (Context Based Restrictions) and SCC scope
-##############################################################################
-data "ibm_iam_auth_token" "tokendata" {}
-data "ibm_iam_account_settings" "account_settings" {}
-
-locals {
-  account_id = data.ibm_iam_account_settings.account_settings.account_id
+variable "access_tags" {
+  type        = list(string)
+  description = "A list of access tags to apply"
+  default     = []
 }

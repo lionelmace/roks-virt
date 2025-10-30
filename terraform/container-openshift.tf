@@ -1,298 +1,152 @@
-
-# OpenShift Variables
-##############################################################################
-
-variable "openshift_cluster_name" {
-  description = "Name of the cluster"
+########################################################################################################################
+# Variables
+########################################################################################################################
+variable "ocp_version" {
   type        = string
-  default     = "roks"
-}
-
-variable "openshift_version" {
-  description = "The OpenShift version that you want to set up in your cluster."
-  type        = string
-  default     = ""
-}
-
-variable "openshift_os" {
-  description = "The Operating System (REDHAT_8_64 or RHCOS) for the Worker Nodes."
-  type        = string
-  default     = "RHCOS"
-}
-
-variable "openshift_machine_flavor" {
-  description = " The default flavor of the OpenShift worker node."
-  type        = string
-  default     = "bx2.4x16"
-}
-
-variable "openshift_worker_nodes_per_zone" {
-  description = "The number of worker nodes per zone in the default worker pool."
-  type        = number
-  default     = 1
-}
-
-variable "excluded_zones" {
-  description = "List of zones to exclude from the dynamic zone assignment"
-  type        = list(string)
-}
-
-variable "worker_labels" {
-  description = "Labels on all the workers in the default worker pool."
-  type        = map(any)
+  description = "Version of the OCP cluster to provision"
   default     = null
 }
 
-variable "openshift_wait_till" {
-  description = "specify the stage when Terraform to mark the cluster creation as completed."
+variable "ocp_entitlement" {
   type        = string
-  default     = "OneWorkerNodeReady"
+  description = "Value that is applied to the entitlements for OCP cluster provisioning"
+  default     = null
+}
 
-  validation {
-    error_message = "`openshift_wait_till` value must be one of `MasterNodeReady`, `OneWorkerNodeReady`, or `IngressReady`."
-    condition = contains([
-      "MasterNodeReady",
-      "OneWorkerNodeReady",
-      "IngressReady"
-    ], var.openshift_wait_till)
+variable "enable_openshift_version_upgrade" {
+  type        = bool
+  description = "When set to true, allows Terraform to manage major OpenShift version upgrades. This is intended for advanced users who manually control major version upgrades. Defaults to false to avoid unintended drift from IBM-managed patch updates. NOTE: Enabling this on existing clusters requires a one-time terraform state migration. See [README](https://github.com/terraform-ibm-modules/terraform-ibm-base-ocp-vpc/blob/main/README.md#openshift-version-upgrade) for details."
+  default     = false
+}
+
+variable "disable_outbound_traffic_protection" {
+  type        = bool
+  description = "When set to true, enabled outbound traffic."
+  default     = false
+}
+
+variable "default_worker_pool_machine_type" {
+  type        = string
+  description = "The machine type for the default worker pool"
+  default     = "bx2.4x16"
+}
+
+
+########################################################################################################################
+# 3 zone OCP VPC cluster
+########################################################################################################################
+
+locals {
+
+  # Get all subnets from the VPC module
+  all_subnets = module.vpc.subnet_zone_list
+
+  # Define subnets for the default worker pool (across 3 zones)
+  subnets = [
+    for subnet in local.all_subnets :
+    {
+      id         = subnet.id
+      zone       = subnet.zone
+      cidr_block = subnet.cidr
+    }
+  ]
+
+  # mapping of cluster worker pool names to subnets
+  cluster_vpc_subnets = {
+    zone-1 = local.subnets,
+    zone-2 = local.subnets,
+    zone-3 = local.subnets
   }
-}
 
-variable "openshift_disable_outbound_traffic_protection" {
-  description = "Include this option to allow public outbound access from the cluster workers."
-  type        = bool
-  default     = true
-}
+  boot_volume_encryption_kms_config = {
+    crk             = module.kp_all_inclusive.keys["${local.key_ring}.${local.boot_volume_key}"].key_id
+    kms_instance_id = module.kp_all_inclusive.kms_guid
+  }
 
-variable "openshift_disable_public_service_endpoint" {
-  description = "Boolean value true if Public service endpoint to be disabled."
-  type        = bool
-  default     = false
-}
-
-variable "openshift_force_delete_storage" {
-  description = "force the removal of persistent storage associated with the cluster during cluster deletion."
-  type        = bool
-  default     = true
-}
-
-variable "kms_config" {
-  type    = list(map(string))
-  default = []
-}
-
-variable "entitlement" {
-  description = "Enable openshift entitlement during cluster creation ."
-  type        = string
-  default     = "cloud_pak"
-}
-
-variable "openshift_update_all_workers" {
-  description = "OpenShift version of the worker nodes is updated."
-  type        = bool
-  default     = true
-}
-
-variable "is_openshift_cluster" {
-  type    = bool
-  default = true
-}
-
-variable "create_secondary_roks_pool" {
-  description = "Set to true to create the secondary worker pool."
-  type        = bool
-  default     = false
-}
-
-variable "install_odf_addons" {
-  type    = bool
-  default = false
-}
-
-variable "roks_worker_pools" {
-  description = "List of maps describing worker pools"
-
-  type = list(object({
-    pool_name        = string
-    machine_type     = string
-    workers_per_zone = number
-  }))
-
-  default = [
+  worker_pools = [
+    {
+      subnet_prefix                     = "zone-1"
+      pool_name                         = "default" # ibm_container_vpc_cluster automatically names default pool "default" (See https://github.com/IBM-Cloud/terraform-provider-ibm/issues/2849)
+      machine_type                      = "bx2.16x64"
+      workers_per_zone                  = 1
+      operating_system                  = "RHCOS"
+      enableAutoscaling                 = true
+      minSize                           = 1
+      maxSize                           = 6
+      boot_volume_encryption_kms_config = local.boot_volume_encryption_kms_config
+    },
     # {
-    #   pool_name        = "odf"
-    #   machine_type     = "bx2.16x64"
-    #   workers_per_zone = 1
-    # },
-    # {
-    #   pool_name        = "dev"
-    #   machine_type     = "bx2.4x16"
-    #   workers_per_zone = 1
+    #   subnet_prefix                     = "zone-2"
+    #   pool_name                         = "zone-2"
+    #   machine_type                      = "bx2.16x64"
+    #   workers_per_zone                  = 1
+    #   secondary_storage                 = "300gb.5iops-tier"
+    #   operating_system                  = "RHCOS"
+    #   boot_volume_encryption_kms_config = local.boot_volume_encryption_kms_config
     # }
   ]
 
-  validation {
-    error_message = "Worker pool names must match the regex `^([a-z]|[a-z][-a-z0-9]*[a-z0-9])$`."
-    condition = length([
-      for pool in var.roks_worker_pools :
-      false if !can(regex("^([a-z]|[a-z][-a-z0-9]*[a-z0-9])$", pool.pool_name))
-    ]) == 0
-  }
-
-  validation {
-    error_message = "Worker pools cannot have duplicate names."
-    condition = length(distinct([
-      for pool in var.roks_worker_pools :
-      pool.pool_name
-    ])) == length(var.roks_worker_pools)
-  }
-}
-
-## Resources
-##############################################################################
-resource "ibm_container_vpc_cluster" "roks_cluster" {
-  name              = format("%s-%s", local.basename, var.openshift_cluster_name)
-  vpc_id            = ibm_is_vpc.vpc.id
-  resource_group_id = local.resource_group_id
-  # Optional: Specify OpenShift version. If not included, 4.19 is used
-  kube_version         = var.openshift_version == "" ? "4.19_openshift" : var.openshift_version
-  operating_system     = var.openshift_os
-  cos_instance_crn     = var.is_openshift_cluster ? ibm_resource_instance.cos_openshift_registry[0].id : null
-  entitlement          = var.entitlement
-  force_delete_storage = var.openshift_force_delete_storage
-  tags                 = var.tags
-  update_all_workers   = var.openshift_update_all_workers
-  security_groups      = [ibm_is_security_group.sg-cluster-outbound.id]
-
-  flavor                          = var.openshift_machine_flavor
-  worker_count                    = var.openshift_worker_nodes_per_zone
-  wait_till                       = var.openshift_wait_till
-  disable_public_service_endpoint = var.openshift_disable_public_service_endpoint
-  # By default, public outbound access is blocked in OpenShift versions 4.15
-  disable_outbound_traffic_protection = var.openshift_disable_outbound_traffic_protection
-
-  dynamic "zones" {
-    # for_each = { for subnet in ibm_is_subnet.subnet : subnet.id => subnet }
-    # Skip ca-tor-1 and ca-tor-3 because insufficient capacity within those MZRs.
-    for_each = {
-      for subnet in ibm_is_subnet.subnet :
-      subnet.id => subnet
-      if !contains(var.excluded_zones, subnet.zone)
-    }
-    content {
-      name      = zones.value.zone
-      subnet_id = zones.value.id
-    }
-  }
-
-  kms_config {
-    instance_id      = ibm_resource_instance.key-protect.guid # GUID of Key Protect instance
-    crk_id           = ibm_kms_key.key.key_id                 # ID of customer root key
-    private_endpoint = true
-  }
-  # depends_on = [
-  #   ibm_iam_authorization_policy.roks-kms
-  # ]
-}
-
-# Additional Worker Pool
-##############################################################################
-resource "ibm_container_vpc_worker_pool" "roks_worker_pools" {
-  for_each = var.create_secondary_roks_pool ? { for pool in var.roks_worker_pools : pool.pool_name => pool } : {}
-
-  cluster           = ibm_container_vpc_cluster.roks_cluster.id
-  resource_group_id = local.resource_group_id
-  worker_pool_name  = each.key
-  flavor            = lookup(each.value, "machine_type", null)
-  vpc_id            = ibm_is_vpc.vpc.id
-  worker_count      = each.value.workers_per_zone
-  operating_system  = var.openshift_os
-
-  dynamic "zones" {
-    for_each = { for subnet in ibm_is_subnet.subnet : subnet.id => subnet }
-    content {
-      name      = zones.value.zone
-      subnet_id = zones.value.id
-    }
+  worker_pools_taints = {
+    all     = []
+    default = []
+    zone-2 = [{
+      key    = "dedicated"
+      value  = "zone-2"
+      effect = "NoExecute"
+    }]
+    zone-3 = [{
+      key    = "dedicated"
+      value  = "zone-3"
+      effect = "NoExecute"
+    }]
   }
 }
 
-## Install Containers Add-on
-resource "ibm_container_addons" "roks-general-addons" {
-  depends_on = [ibm_container_vpc_cluster.roks_cluster]
-  cluster    = ibm_container_vpc_cluster.roks_cluster.name
-  # Block Storage for VPC is installed by default at the cluster creation
-  addons {
-    name    = "vpc-block-csi-driver"
-    version = "5.2"
-  }
-  # addons {
-  #   name    = "cluster-autoscaler"
-  #   version = "1.2.3"
-  # }
-  # addons {
-  #   name    = "vpc-file-csi-driver"
-  #   version = "2.0"
-  # }
-}
+module "ocp_base" {
+  source = "terraform-ibm-modules/base-ocp-vpc/ibm"
 
-resource "ibm_container_addons" "roks-odf-addons" {
-  count      = var.install_odf_addons ? 1 : 0
-  depends_on = [ibm_container_vpc_cluster.roks_cluster]
-  cluster    = ibm_container_vpc_cluster.roks_cluster.name
-  # Source: https://github.com/IBM-Cloud/terraform-provider-ibm/tree/master/examples/openshift-data-foundation/addon/4.18.0
-  # Specify workerpool to deploy ODF, if not specified ODF will deploy on all nodes
-  addons {
-    name            = "openshift-data-foundation"
-    version         = "4.18.0"
-    parameters_json = <<PARAMETERS_JSON
-    {
-        "billingType":"advanced"
-        "osdSize":"200Gi",
-        "numOfOsd":"2",
-        "osdStorageClassName":"ibmc-vpc-block-metro-10iops-tier",
-        "odfDeploy":"true"
-        "workerPools":"wpool-odf"
-    }
-    PARAMETERS_JSON
+  cluster_name                        = var.prefix
+  resource_group_id                   = module.resource_group.resource_group_id
+  region                              = var.region
+  force_delete_storage                = true
+  vpc_id                              = module.vpc.vpc_id
+  vpc_subnets                         = local.cluster_vpc_subnets
+  worker_pools                        = local.worker_pools
+  ocp_version                         = var.ocp_version
+  tags                                = var.resource_tags
+  access_tags                         = var.access_tags
+  worker_pools_taints                 = local.worker_pools_taints
+  ocp_entitlement                     = var.ocp_entitlement
+  enable_openshift_version_upgrade    = var.enable_openshift_version_upgrade
+  disable_outbound_traffic_protection = var.disable_outbound_traffic_protection
+  # Enable if using worker autoscaling. Stops Terraform managing worker count.
+  ignore_worker_pool_size_changes = true
+  addons = {
+    "cluster-autoscaler"  = { version = "1.2.3" }
+    "vpc-file-csi-driver" = { version = "2.0" }  # 2.0 will enable latest driver version such as 2.0.16
+  }
+  kms_config = {
+    instance_id = module.kp_all_inclusive.kms_guid
+    crk_id      = module.kp_all_inclusive.keys["${local.key_ring}.${local.cluster_key}"].key_id
   }
 }
 
-## IAM
-##############################################################################
-# resource "ibm_iam_access_group_policy" "iam-roks" {
-#   access_group_id = ibm_iam_access_group.accgrp.id
-#   # Full Access Rights
-#   roles = ["Reader", "Writer", "Manager", "Administrator", "Editor", "Operator", "Viewer"]
-
-#   resources {
-#     service           = "containers-kubernetes"
-#     resource_group_id = local.resource_group_id
-#   }
-# }
-
-
-# Object Storage to backup the OpenShift Internal Registry
-##############################################################################
-resource "ibm_resource_instance" "cos_openshift_registry" {
-  count             = var.is_openshift_cluster ? 1 : 0
-  name              = join("-", [local.basename, "cos-registry"])
-  resource_group_id = local.resource_group_id
-  service           = "cloud-object-storage"
-  plan              = "standard"
-  location          = "global"
-  tags              = var.tags
+data "ibm_container_cluster_config" "cluster_config" {
+  cluster_name_id   = module.ocp_base.cluster_id
+  resource_group_id = module.ocp_base.resource_group_id
+  #LMA config_dir        = "${path.module}/../../kubeconfig"
 }
 
-# IAM AUTHORIZATIONS
-##############################################################################
+########################################################################################################################
+# Kube Audit
+########################################################################################################################
 
-# Authorization policy between OpenShift and Key Protect
-# Require to encrypt OpenShift with Key in Key Protect
-resource "ibm_iam_authorization_policy" "roks-kms" {
-  source_service_name         = "containers-kubernetes"
-  source_resource_instance_id = ibm_container_vpc_cluster.roks_cluster.id
-  target_service_name         = "kms"
-  target_resource_instance_id = ibm_resource_instance.key-protect.guid
-  roles                       = ["Reader"]
+module "kube_audit" {
+  depends_on                = [module.ocp_base] # Wait for the cluster to completely deploy.
+  source                    = "terraform-ibm-modules/base-ocp-vpc/ibm//modules/kube-audit"
+  cluster_id                = module.ocp_base.cluster_id
+  cluster_resource_group_id = module.resource_group.resource_group_id
+  audit_log_policy          = "WriteRequestBodies"
+  region                    = var.region
+  ibmcloud_api_key          = var.ibmcloud_api_key
 }

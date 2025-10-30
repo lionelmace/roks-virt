@@ -1,50 +1,32 @@
-##############################################################################
-## Key Protect
-##############################################################################
-resource "ibm_resource_instance" "key-protect" {
-  resource_group_id = local.resource_group_id
-  name              = format("%s-%s", local.basename, "key-protect")
-  service           = "kms"
-  plan              = "tiered-pricing"
-  location          = var.region
-  tags              = var.tags
-  service_endpoints = "private"
+
+########################################################################################################################
+# Key Protect
+########################################################################################################################
+
+locals {
+  key_ring        = "ocp"
+  cluster_key     = "${var.prefix}-cluster-data-encryption-key"
+  boot_volume_key = "${var.prefix}-boot-volume-encryption-key"
 }
 
-resource "ibm_kms_instance_policies" "instance_policy" {
-  instance_id = ibm_resource_instance.key-protect.guid
-  rotation {
-    enabled        = true
-    interval_month = 3
-  }
-  # A instance with dual authorization policy enabled cannot be destroyed by using Terraform.
-  dual_auth_delete {
-    enabled = false
-  }
-  metrics {
-    enabled = true
-  }
-  key_create_import_access {
-    enabled = true
-  }
-}
-
-resource "ibm_kms_key" "key" {
-  instance_id  = ibm_resource_instance.key-protect.guid
-  key_name     = "${local.basename}-root-key"
-  standard_key = false
-  force_delete = true
-}
-
-resource "ibm_kms_key_policies" "key_policy" {
-  instance_id = ibm_resource_instance.key-protect.guid
-  key_id      = ibm_kms_key.key.key_id
-  rotation {
-    enabled        = true
-    interval_month = 3
-  }
-  # A instance with dual authorization policy enabled cannot be destroyed by using Terraform.
-  dual_auth_delete {
-    enabled = false
-  }
+module "kp_all_inclusive" {
+  source                    = "terraform-ibm-modules/kms-all-inclusive/ibm"
+  version                   = "5.4.3"
+  key_protect_instance_name = "${var.prefix}-kp-instance"
+  resource_group_id         = module.resource_group.resource_group_id
+  region                    = var.region
+  resource_tags             = var.resource_tags
+  keys = [{
+    key_ring_name = local.key_ring
+    keys = [
+      {
+        key_name     = local.cluster_key
+        force_delete = true
+      },
+      {
+        key_name     = local.boot_volume_key
+        force_delete = true
+      }
+    ]
+  }]
 }
