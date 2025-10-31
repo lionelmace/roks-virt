@@ -82,9 +82,9 @@ locals {
       machine_type                      = "bx2.16x64"
       workers_per_zone                  = 1
       operating_system                  = "RHCOS"
-      enableAutoscaling                 = true
-      minSize                           = 1
-      maxSize                           = 6
+      # enableAutoscaling                 = true
+      # minSize                           = 1
+      # maxSize                           = 6
       boot_volume_encryption_kms_config = local.boot_volume_encryption_kms_config
     },
     # {
