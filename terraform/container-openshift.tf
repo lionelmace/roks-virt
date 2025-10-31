@@ -151,14 +151,15 @@ data "ibm_container_cluster_config" "cluster_config" {
 
 ########################################################################################################################
 # Kube Audit
+# Needs to be commented if used in Terraform Cloud as local-exec not supported by default
 ########################################################################################################################
 
-module "kube_audit" {
-  depends_on                = [module.ocp_base] # Wait for the cluster to completely deploy.
-  source                    = "terraform-ibm-modules/base-ocp-vpc/ibm//modules/kube-audit"
-  cluster_id                = module.ocp_base.cluster_id
-  cluster_resource_group_id = module.resource_group.resource_group_id
-  audit_log_policy          = "WriteRequestBodies"
-  region                    = var.region
-  ibmcloud_api_key          = var.ibmcloud_api_key
-}
+# module "kube_audit" {
+#   depends_on                = [module.ocp_base] # Wait for the cluster to completely deploy.
+#   source                    = "terraform-ibm-modules/base-ocp-vpc/ibm//modules/kube-audit"
+#   cluster_id                = module.ocp_base.cluster_id
+#   cluster_resource_group_id = module.resource_group.resource_group_id
+#   audit_log_policy          = "WriteRequestBodies"
+#   region                    = var.region
+#   ibmcloud_api_key          = var.ibmcloud_api_key
+# }
