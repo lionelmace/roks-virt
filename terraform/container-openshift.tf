@@ -31,6 +31,12 @@ variable "default_worker_pool_machine_type" {
   default     = "bx2.4x16"
 }
 
+variable "workers_per_zone" {
+  type        = number
+  description = "The number of workers per zone"
+  default     = 1
+}
+
 variable "excluded_zones" {
   description = "List of zones to exclude from the dynamic zone assignment"
   type        = list(string)
