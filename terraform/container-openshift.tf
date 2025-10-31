@@ -82,9 +82,6 @@ locals {
       machine_type                      = "bx2.16x64"
       workers_per_zone                  = 1
       operating_system                  = "RHCOS"
-      # enableAutoscaling                 = true
-      # minSize                           = 1
-      # maxSize                           = 6
       boot_volume_encryption_kms_config = local.boot_volume_encryption_kms_config
     },
     # {
@@ -131,8 +128,8 @@ module "ocp_base" {
   ocp_entitlement                     = var.ocp_entitlement
   enable_openshift_version_upgrade    = var.enable_openshift_version_upgrade
   disable_outbound_traffic_protection = var.disable_outbound_traffic_protection
-  # Enable if using worker autoscaling. Stops Terraform managing worker count.
-  ignore_worker_pool_size_changes = true
+  # Set to folse as local-exec is not supported by default on Terraform Cloud
+  verify_worker_network_readiness     = false
   addons = {
     # "cluster-autoscaler"  = { version = "1.2.3" }
     # "vpc-file-csi-driver" = { version = "2.0" }  # 2.0 will enable latest driver version such as 2.0.16
