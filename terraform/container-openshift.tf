@@ -31,6 +31,11 @@ variable "default_worker_pool_machine_type" {
   default     = "bx2.4x16"
 }
 
+variable "excluded_zones" {
+  description = "List of zones to exclude from the dynamic zone assignment"
+  type        = list(string)
+}
+
 
 ########################################################################################################################
 # 3 zone OCP VPC cluster
@@ -49,6 +54,7 @@ locals {
       zone       = subnet.zone
       cidr_block = subnet.cidr
     }
+    if !contains(var.excluded_zones, subnet.zone)
   ]
 
   # mapping of cluster worker pool names to subnets
@@ -122,8 +128,8 @@ module "ocp_base" {
   # Enable if using worker autoscaling. Stops Terraform managing worker count.
   ignore_worker_pool_size_changes = true
   addons = {
-    "cluster-autoscaler"  = { version = "1.2.3" }
-    "vpc-file-csi-driver" = { version = "2.0" }  # 2.0 will enable latest driver version such as 2.0.16
+    # "cluster-autoscaler"  = { version = "1.2.3" }
+    # "vpc-file-csi-driver" = { version = "2.0" }  # 2.0 will enable latest driver version such as 2.0.16
   }
   kms_config = {
     instance_id = module.kp_all_inclusive.kms_guid
