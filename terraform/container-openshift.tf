@@ -131,7 +131,6 @@ module "ocp_base" {
   # Set to folse as local-exec is not supported by default on Terraform Cloud
   verify_worker_network_readiness     = false
   addons = {
-    # "cluster-autoscaler"  = { version = "1.2.3" }
     # "vpc-file-csi-driver" = { version = "2.0" }  # 2.0 will enable latest driver version such as 2.0.16
   }
   kms_config = {

@@ -12,7 +12,6 @@ module "vpc" {
   name              = "${var.prefix}-vpc"
 
   # Define subnets across 3 zones for the default worker pool
-  # and a separate subnet in zone 1 for the GPU worker pool
   subnets = {
     zone-1 = [
       {
@@ -20,13 +19,7 @@ module "vpc" {
         cidr           = "10.10.10.0/24"
         public_gateway = true
         acl_name       = "vpc-acl"
-      },
-      # {
-      #   name           = "subnet-gpu"
-      #   cidr           = "10.10.20.0/24"
-      #   public_gateway = true
-      #   acl_name       = "vpc-acl"
-      # }
+      }
     ],
     zone-2 = [
       {
