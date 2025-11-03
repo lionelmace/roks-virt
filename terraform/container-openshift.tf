@@ -22,7 +22,7 @@ variable "enable_openshift_version_upgrade" {
 variable "disable_outbound_traffic_protection" {
   type        = bool
   description = "When set to true, enabled outbound traffic."
-  default     = false
+  default     = true
 }
 
 variable "default_worker_pool_machine_type" {
