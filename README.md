@@ -134,7 +134,7 @@ The Terraform scripts will provision a 4.19 ROKS clusters with two Bare metal wo
       labels:
         app: fedora-stateless
     spec:
-      running: true
+      runStrategy: Always # VM starts automatically and restarts if stopped
       template:
         spec:
           domain:
