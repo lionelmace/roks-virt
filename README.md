@@ -209,7 +209,7 @@ The Terraform scripts will provision a 4.19 ROKS clusters with two Bare metal wo
     STORAGE_CLASS_NAME=ibmc-vpc-block-10iops-tier
     ```
 
-1. Create an Image Pull Secret so that the Containerized Data Importer(CDI) can authenticate itself against the internal registry and pull the image to create a DataVolume out of it. The secret is essentially the default service account image pull secret token which is meant for registry authentication.
+1. Create an Image Pull Secret so that the Containerized Data Importer (CDI) can authenticate itself against the internal registry and pull the image to create a DataVolume out of it. The secret is essentially the default service account image pull secret token which is meant for registry authentication.
 
     ```sh
     ./generate_image_pull_secret.sh
@@ -226,6 +226,7 @@ The Terraform scripts will provision a 4.19 ROKS clusters with two Bare metal wo
       labels:
         app: fedora-dv
     spec:
+      runStrategy: Always # VM starts automatically and restarts if stopped
       dataVolumeTemplates:
         - apiVersion: cdi.kubevirt.io/v1
           kind: DataVolume
@@ -243,7 +244,6 @@ The Terraform scripts will provision a 4.19 ROKS clusters with two Bare metal wo
               registry:
                 url: "docker://image-registry.openshift-image-registry.svc:5000/$DEPLOY_NAMESPACE/virt-fedora:32"
                 secretRef: "internal-reg-pull-secret"
-      running: true
       template:
         metadata:
           labels:
@@ -357,6 +357,109 @@ The Terraform scripts will provision a 4.19 ROKS clusters with two Bare metal wo
     [root@fedora-stateless ~]#
     ```
 
+## Access the VM via SSH
+
+1. Store the SSH Key in an environment variable.
+
+    ```sh
+    export SSH_KEY=$(cat ~/.ssh/id_rsa.pub)
+    ```
+
+1. Create a Secret that contains the cloud-init userData with SSH key
+
+    ```sh
+    cat <<EOF | oc apply -f -
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: fedora-cloudinit-secret
+      namespace: $DEPLOY_NAMESPACE
+    type: Opaque
+    stringData:
+      userData: |
+        #cloud-config
+        ssh_pwauth: false         # disable SSH password login
+        users:
+          - name: fedora          # or any user you want
+            gecos: Fedora User
+            groups: [wheel]
+            sudo: ALL=(ALL) NOPASSWD:ALL
+            shell: /bin/bash
+            ssh_authorized_keys:
+              - $SSH_KEY
+        hostname: fedora-dv
+    EOF
+    ```
+
+1. Provision a Stateless VM with a SSH key in a Secret
+
+    ```sh
+    cat <<EOF | oc apply -n $DEPLOY_NAMESPACE -f -
+    apiVersion: kubevirt.io/v1
+    kind: VirtualMachine
+    metadata:
+      name: fedora-stateless-ssh
+      labels:
+        app: fedora-stateless
+    spec:
+      runStrategy: Always # VM starts automatically and restarts if stopped
+      template:
+        spec:
+          domain:
+            cpu:
+              cores: 1
+              sockets: 1
+              threads: 1
+            devices:
+              disks:
+                - bootOrder: 1
+                  disk:
+                    bus: virtio
+                  name: rootdisk
+                - bootOrder: 4
+                  disk:
+                    bus: virtio
+                  name: cloudinitdisk
+              interfaces:
+                - bootOrder: 2
+                  masquerade: {}
+                  model: virtio
+                  name: nic0
+              networkInterfaceMultiqueue: true
+              rng: {}
+            machine:
+              type: pc-q35-rhel8.1.0
+            resources:
+              requests:
+                memory: 2Gi
+          evictionStrategy: LiveMigrate
+          hostname: fedora-stateless
+          networks:
+            - name: nic0
+              pod: {}
+          terminationGracePeriodSeconds: 0
+          volumes:
+            - containerDisk:
+                image: 'image-registry.openshift-image-registry.svc.cluster.local:5000/$DEPLOY_NAMESPACE/virt-fedora:32'
+                imagePullPolicy: Always
+              name: rootdisk
+            - cloudInitNoCloud:
+                secretRef:
+                  name: fedora-cloudinit-secret
+              name: cloudinitdisk
+    EOF
+    ```
+
+1. Connect to the VM with virtctl
+
+    ```sh
+    virtctl ssh \
+      --namespace vm-project \
+      --username fedora \
+      --local-ssh-opts="-o StrictHostKeyChecking=accept-new" \
+      vmi/fedora-stateless-ssh
+    ```
+
 ## Clean up the VM and the infrastructure
 
 1. Delete the Virtual Machine
@@ -369,4 +472,18 @@ The Terraform scripts will provision a 4.19 ROKS clusters with two Bare metal wo
 
     ```sh
     terraform destroy
+    ```
+
+## Useful VM commands
+
+1. List of VM in a Project
+
+    ```sh
+    oc get vmi -n "$DEPLOY_NAMESPACE"
+    ````
+
+1. List of events on a specific VM
+
+    ```sh
+    oc describe vmi rhel-10-violet-tick-73 -n "$DEPLOY_NAMESPACE"
     ```

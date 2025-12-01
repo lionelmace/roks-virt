@@ -11,6 +11,7 @@ terraform-iam/testing.auto.tfvars
 # Key
 *.pem
 *.pub
+*.key
 
 # Local .terraform directories
 **/.terraform/*
