@@ -15,13 +15,14 @@ Finally, you will deploy two types of VMs:
 
 ## Agenda
 
-  * [Pre-Requisites](pre-requisites)
-  * [Provision the cluster via Terraform](provision-the-cluster-via-terraform)
-  * [Install the OpenShift Virtualization Operator](install-the-openshift-virtualization-operator)
-  * [Import Image to the OpenShift Registry](import-image-to-the-openshift-registry)
+  * [Pre-Requisites](#pre-requisites)
+  * [Provision the cluster via Terraform](#provision-the-cluster-via-terraform)
+  * [Install the OpenShift Virtualization Operator](#install-the-openshift-virtualization-operator)
+  * [Import Image to the OpenShift Registry](#import-image-to-the-openshift-registry)
   * [Provision a stateless VM](#provision-a-stateless-vm)
-  * [Provision a stateful VM](provision-a-stateful-vm)
-  * [Provision a stateful VM](provision-a-stateful-vm)
+  * [Provision a stateful VM](#provision-a-stateful-vm)
+  * [Access the VM via SSH](#access-the-vm-via-ssh)
+  * [Deploy NGinx on the VM and expose it as a route](#deploy-nginx-on-the-vm-and-expose-it-as-a-route)
 
 ## Pre-Requisites
 
@@ -470,7 +471,7 @@ The Terraform scripts will provision a 4.19 ROKS clusters with two Bare metal wo
       vmi/fedora-stateless-ssh
     ```
 
-## Deploy NGINX on the VM and expose it as a Service/Route
+## Deploy NGINX on the VM and expose it as a Route
 
 1. Install nginx in Fedora. Inside the VM, become root
 
