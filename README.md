@@ -462,10 +462,8 @@ The Terraform scripts will provision a 4.19 ROKS clusters with two Bare metal wo
 
 ## Deploy NGINX on the VM and expose it as a Service/Route
 
-1. Install nginx in Fedora
+1. Install nginx in Fedora. Inside the VM, become root
 
-Inside the VM:
-# Become root
     ```sh
     sudo -i
     ```
@@ -496,7 +494,7 @@ Inside the VM:
     ss -tulnp | grep nginx
     ```
 
-1. fddfsd
+1. Deploy a Service
 
     ```sh
     cat <<EOF | oc apply -f -
