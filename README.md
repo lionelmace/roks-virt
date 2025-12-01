@@ -460,6 +460,88 @@ The Terraform scripts will provision a 4.19 ROKS clusters with two Bare metal wo
       vmi/fedora-stateless-ssh
     ```
 
+## Deploy NGINX on the VM and expose it as a Service/Route
+
+1. Install nginx in Fedora
+
+Inside the VM:
+# Become root
+    ```sh
+    sudo -i
+    ```
+
+1. Update packages (optional but recommended)
+
+    ```sh
+    dnf -y update
+    ```
+
+1. Install nginx
+
+    ```sh
+    dnf -y install nginx
+    ```
+
+1. Enable and start nginx
+
+    ```sh
+    systemctl enable nginx
+    systemctl start nginx
+    systemctl status nginx
+    ```
+
+1. You should see it active (running) and listening on port 80:
+
+    ```sh
+    ss -tulnp | grep nginx
+    ```
+
+1. fddfsd
+
+    ```sh
+    cat <<EOF | oc apply -f -
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: fedora-web
+      namespace: $DEPLOY_NAMESPACE
+    spec:
+      selector:
+        kubevirt.io/domain: fedora-stateless-ssh
+      ports:
+        - name: http
+          port: 80        # Service port
+          targetPort: 80  # nginx port in the VM
+    EOF
+    ```
+
+1. Create a Route
+
+    ```sh
+    cat <<EOF | oc apply -f -
+    apiVersion: route.openshift.io/v1
+    kind: Route
+    metadata:
+      name: fedora-web-route
+      namespace: $DEPLOY_NAMESPACE
+      labels:
+        app: hello
+        tier: frontend
+    spec:
+      host: shared-virt-roks-5348c99e82c5c6b8edeec6aa250d032f-0000.eu-de.containers.appdomain.cloud
+      secretName: shared-virt-roks-5348c99e82c5c6b8edeec6aa250d032f-0000
+      to:
+        kind: Service
+        name: fedora-web
+        weight: 100
+      port:
+        targetPort: 80
+      tls:
+        termination: edge
+      wildcardPolicy: None
+    EOF
+    ```
+
 ## Clean up the VM and the infrastructure
 
 1. Delete the Virtual Machine
