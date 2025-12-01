@@ -13,6 +13,16 @@ Finally, you will deploy two types of VMs:
 
 ![Operator OSV welcome](./images/operator-osv-welcome.png)
 
+## Agenda
+
+  * [Pre-Requisites](pre-requisites)
+  * [Provision the cluster via Terraform](provision-the-cluster-via-terraform)
+  * [Install the OpenShift Virtualization Operator](install-the-openshift-virtualization-operator)
+  * [Import Image to the OpenShift Registry](import-image-to-the-openshift-registry)
+  * [Provision a stateless VM](#provision-a-stateless-vm)
+  * [Provision a stateful VM](provision-a-stateful-vm)
+  * [Provision a stateful VM](provision-a-stateful-vm)
+
 ## Pre-Requisites
 
     * terraform
