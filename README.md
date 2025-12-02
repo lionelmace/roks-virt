@@ -15,14 +15,14 @@ Finally, you will deploy two types of VMs:
 
 ## Agenda
 
-  * [Pre-Requisites](#pre-requisites)
-  * [Provision the cluster via Terraform](#provision-the-cluster-via-terraform)
-  * [Install the OpenShift Virtualization Operator](#install-the-openshift-virtualization-operator)
-  * [Import Image to the OpenShift Registry](#import-image-to-the-openshift-registry)
-  * [Provision a stateless VM](#provision-a-stateless-vm)
-  * [Provision a stateful VM](#provision-a-stateful-vm)
-  * [Access the VM via SSH](#access-the-vm-via-ssh)
-  * [Deploy NGinx on the VM and expose it as a route](#deploy-nginx-on-the-vm-and-expose-it-as-a-route)
+* [Pre-Requisites](#pre-requisites)
+* [Provision the cluster via Terraform](#provision-the-cluster-via-terraform)
+* [Install the OpenShift Virtualization Operator](#install-the-openshift-virtualization-operator)
+* [Import Image to the OpenShift Registry](#import-image-to-the-openshift-registry)
+* [Provision a stateless VM](#provision-a-stateless-vm)
+* [Provision a stateful VM](#provision-a-stateful-vm)
+* [Access the VM via SSH](#access-the-vm-via-ssh)
+* [Deploy NGinx on the VM and expose it as a route](#deploy-nginx-on-the-vm-and-expose-it-as-a-route)
 
 ## Pre-Requisites
 
@@ -411,7 +411,7 @@ The Terraform scripts will provision a 4.19 ROKS clusters with two Bare metal wo
     metadata:
       name: fedora-stateless-ssh
       labels:
-        app: fedora-stateless
+        app: fedora-stateless-ssh
     spec:
       runStrategy: Always # VM starts automatically and restarts if stopped
       template:
@@ -444,7 +444,7 @@ The Terraform scripts will provision a 4.19 ROKS clusters with two Bare metal wo
               requests:
                 memory: 2Gi
           evictionStrategy: LiveMigrate
-          hostname: fedora-stateless
+          hostname: fedora-stateless-ssh
           networks:
             - name: nic0
               pod: {}
@@ -505,6 +505,19 @@ The Terraform scripts will provision a 4.19 ROKS clusters with two Bare metal wo
     ss -tulnp | grep nginx
     ```
 
+1. Simplify the web page
+
+    ```sh
+    cat >/usr/share/nginx/html/index.html <<'EOF'
+    <html>
+      <head><title>Fedora VM - Nginx</title></head>
+      <body>
+        <h1>Hello from nginx in a Fedora VM on OpenShift Virtualization!</h1>
+      </body>
+    </html>
+    EOF
+    ````
+
 1. Deploy a Service
 
     ```sh
@@ -516,7 +529,7 @@ The Terraform scripts will provision a 4.19 ROKS clusters with two Bare metal wo
       namespace: $DEPLOY_NAMESPACE
     spec:
       selector:
-        kubevirt.io/domain: fedora-stateless-ssh
+        vm.kubevirt.io/name: fedora-stateless-ssh
       ports:
         - name: http
           port: 80        # Service port
