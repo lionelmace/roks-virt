@@ -564,6 +564,23 @@ The Terraform scripts will provision a 4.19 ROKS clusters with two Bare metal wo
     EOF
     ```
 
+1. Test the route
+
+    ```sh
+    curl https://shared-virt-roks-5348c99e82c5c6b8edeec6aa250d032f-0000.eu-de.containers.appdomain.cloud
+    ```
+
+1. You should see the following output
+
+    ```html
+    <html>
+      <head><title>Fedora VM - Nginx</title></head>
+      <body>
+        <h1>Hello from nginx in a Fedora VM on OpenShift!</h1>
+      </body>
+    </html>
+    ```
+
 ## Clean up the VM and the infrastructure
 
 1. Delete the Virtual Machine
