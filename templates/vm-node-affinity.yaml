@@ -1,0 +1,41 @@
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-node-affinity
+  labels:
+    app: vm-node-affinity
+spec:
+  runStrategy: Always # VM starts automatically and restarts if stopped
+  template:
+    spec:
+      domain:
+        devices:
+          disks:
+            - name: rootdisk
+              disk:
+                bus: virtio
+        resources:
+          requests:
+            memory: 2Gi
+      volumes:
+        - name: rootdisk
+          containerDisk:
+            image: quay.io/containerdisks/fedora:latest
+      affinity:
+        nodeAffinity: 
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - preference:
+              matchExpressions:
+              - key: topology.kubernetes.io/zone
+                operator: In
+                values:
+                - eu-de-1
+            weight: 75
+          - preference:
+              matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - kube-d4i4kvrf0vsfqaq0p8jg-sharedvirtr-default-0000022a
+            weight: 50

@@ -597,6 +597,12 @@ The Terraform scripts will provision a 4.19 ROKS clusters with two Bare metal wo
 
 ## Useful VM commands
 
+1. Connect to VM via virctl console
+
+    ```sh
+    virtctl console fedora-stateless -n vm-project
+    ```
+
 1. List of VM in a Project
 
     ```sh
@@ -608,3 +614,7 @@ The Terraform scripts will provision a 4.19 ROKS clusters with two Bare metal wo
     ```sh
     oc describe vmi rhel-10-violet-tick-73 -n "$DEPLOY_NAMESPACE"
     ```
+
+## Resources
+
+* [Deploy Linux sysdig agent](https://cloud.ibm.com/docs/monitoring?topic=monitoring-agent_linux)
