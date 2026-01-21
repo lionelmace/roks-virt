@@ -223,7 +223,7 @@ The Terraform scripts will provision a 4.19 ROKS clusters with two Bare metal wo
 1. Create an Image Pull Secret so that the Containerized Data Importer (CDI) can authenticate itself against the internal registry and pull the image to create a DataVolume out of it. The secret is essentially the default service account image pull secret token which is meant for registry authentication.
 
     ```sh
-    ./generate_image_pull_secret.sh
+    ./scripts/generate_image_pull_secret.sh
     ```
 
 1. Apply the VirtualMachine manifest
