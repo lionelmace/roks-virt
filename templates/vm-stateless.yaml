@@ -1,0 +1,58 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: fedora-stateless
+  labels:
+    app: fedora-stateless
+spec:
+  runStrategy: Always # VM starts automatically and restarts if stopped
+  template:
+    spec:
+      domain:
+        cpu:
+          cores: 1
+          sockets: 1
+          threads: 1
+        devices:
+          disks:
+            - bootOrder: 1
+              disk:
+                bus: virtio
+              name: rootdisk
+            - bootOrder: 4
+              disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - bootOrder: 2
+              masquerade: {}
+              model: virtio
+              name: nic0
+          networkInterfaceMultiqueue: true
+          rng: {}
+        machine:
+          type: pc-q35-rhel8.1.0
+        resources:
+          requests:
+            memory: 2Gi
+      evictionStrategy: LiveMigrate
+      hostname: fedora-stateless
+      networks:
+        - name: nic0
+          pod: {}
+      terminationGracePeriodSeconds: 0
+      volumes:
+        - containerDisk:
+            image: 'image-registry.openshift-image-registry.svc.cluster.local:5000/mace-vms/virt-fedora:32'
+            imagePullPolicy: Always
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              ssh_pwauth: True
+              chpasswd:
+                list: |
+                  root:password
+                expire: False
+              hostname: fedora-stateless
+          name: cloudinitdisk

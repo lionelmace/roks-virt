@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: fedora-web
+  namespace: mace-vms
+spec:
+  selector:
+    vm.kubevirt.io/name: fedora-stateless
+  ports:
+    - name: http
+      port: 80        # Service port
+      targetPort: 80  # nginx port in the VM
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: fedora-web-route
+  namespace: mace-vms
+  labels:
+    app: hello
+    tier: frontend
+spec:
+  host: shared-virt-roks-5348c99e82c5c6b8edeec6aa250d032f-0000.eu-de.containers.appdomain.cloud
+  secretName: shared-virt-roks-5348c99e82c5c6b8edeec6aa250d032f-0000
+  to:
+    kind: Service
+    name: fedora-web
+    weight: 100
+  port:
+    targetPort: 80
+  tls:
+    termination: edge
+  wildcardPolicy: None
