@@ -11,7 +11,7 @@ ibmcloud ks cluster create vpc-gen2  \
 --vpc-id r010-0fe0b0ee-6a51-4858-819e-aa1eefe62611  \
 --subnet-id 02b7-0e77305a-a522-4fce-be4e-3b37dbafa36f  \
 --flavor cx2d.metal.96x192  \
---workers 2  \
+--workers 3  \
 --operating-system RHCOS  \
 --kube-version 4.20.14_openshift  \
 --disable-outbound-traffic-protection  \

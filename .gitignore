@@ -1,3 +1,4 @@
+local.env
 debug/*
 *.ovpn
 terraform-iam/testing.auto.tfvars
