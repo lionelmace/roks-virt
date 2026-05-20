@@ -18,3 +18,19 @@ ibmcloud ks cluster create vpc-gen2  \
 --cni OVNKubernetes  \
 --cos-instance crn:v1:bluemix:public:cloud-object-storage:global:a/ad09f476263c44cda2cdc697bd808a6f:cb0eb88b-2cfc-48e9-b833-26340218f938::
 ```
+
+
+```sh
+ibmcloud ks cluster create vpc-gen2  \
+--name virt-roks-vni  \
+--zone eu-de-1  \
+--vpc-id r010-0fe0b0ee-6a51-4858-819e-aa1eefe62611  \
+--subnet-id 02b7-0e77305a-a522-4fce-be4e-3b37dbafa36f  \
+--flavor bx3d.metal.64x256  \
+--workers 3  \
+--operating-system RHCOS  \
+--kube-version 4.20.18_openshift  \
+--disable-outbound-traffic-protection  \
+--cni OVNKubernetes  \
+--cos-instance crn:v1:bluemix:public:cloud-object-storage:global:a/ad09f476263c44cda2cdc697bd808a6f:cb0eb88b-2cfc-48e9-b833-26340218f938::
+```
