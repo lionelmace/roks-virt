@@ -1,5 +1,9 @@
 # Preparation for localnet topology
 
+This page explains the preparations steps to to create a new Open vSwitch (OVS) and a bridge mapping. These settings are required to provide proper physical connectivity to VPC.
+
+![OVS Bridge](../images/ovs-bridge.png)
+
 ## Create a new Open vSwitch (OVS)
 
 In the Red Hat OpenShift Virtualization worker nodes in IBM Cloud, there is 2nd PCI interface on the worker node. This interface is initially not used. We will create an OVS and use that as its physical uplink to the VPC.
