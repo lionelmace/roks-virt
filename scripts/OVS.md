@@ -63,7 +63,7 @@ When using localnet topology in OVN-Kubernetes, the bridge mapping tells OVN-kub
     spec:
       desiredState:
         ovn:
-        bridge-mappings:
+          bridge-mappings:
             - localnet: vpc-attachment-vlans
               bridge: br-vpc
               state: present
